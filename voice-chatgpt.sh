@@ -15,6 +15,10 @@ source "$ENV_FILE"
 AUDIO_FILE="$LOG_DIR/voice_input.wav"
 TRANSCRIPT_FILE="$LOG_DIR/transcripts.log"
 CONVERSATION_FILE="$LOG_DIR/conversation.json"
+SESSION_ID_FILE="$LOG_DIR/current_session.id"
+
+# Database integration
+DB_SCRIPT="$(dirname "$0")/supabase_integration.py"
 
 # Colors
 GREEN='\033[0;32m'
@@ -30,6 +34,18 @@ mkdir -p "$LOG_DIR"
 if [ ! -f "$CONVERSATION_FILE" ]; then
     echo '[]' > "$CONVERSATION_FILE"
 fi
+
+# Initialize session ID if it doesn't exist
+if [ ! -f "$SESSION_ID_FILE" ]; then
+    if [ -f "$DB_SCRIPT" ]; then
+        python3 "$DB_SCRIPT" session-id > "$SESSION_ID_FILE"
+    else
+        echo "session_$(date +%Y%m%d%H%M%S)_$(openssl rand -hex 4)" > "$SESSION_ID_FILE"
+    fi
+fi
+
+# Load current session ID
+CURRENT_SESSION_ID=$(cat "$SESSION_ID_FILE")
 
 # Function to add message to conversation history
 add_to_conversation() {
@@ -61,6 +77,7 @@ show_help() {
     echo "  🧹 Clear: 'clear', 'clear conversation', 'reset'"
     echo "  📢 TTS: 'tts on', 'enable tts', 'turn on speech'"
     echo "  🔇 TTS: 'tts off', 'disable tts', 'turn off speech'"
+    echo "  🆕 New: 'new session', 'new conversation', 'start over'"
     echo "  ❓ Help: 'help', 'commands', 'what can i say'"
     echo ""
     echo -e "${GREEN}Controls:${NC}"
@@ -149,21 +166,51 @@ while true; do
             rm -f "$AUDIO_FILE"
             continue
             ;;
+        "new session"|"new conversation"|"start over")
+            # Generate new session ID
+            if [ -f "$DB_SCRIPT" ]; then
+                NEW_SESSION_ID=$(python3 "$DB_SCRIPT" session-id)
+            else
+                NEW_SESSION_ID="session_$(date +%Y%m%d%H%M%S)_$(openssl rand -hex 4)"
+            fi
+            echo "$NEW_SESSION_ID" > "$SESSION_ID_FILE"
+            CURRENT_SESSION_ID="$NEW_SESSION_ID"
+            echo '[]' > "$CONVERSATION_FILE"
+            echo -e "${GREEN}New conversation session started: $CURRENT_SESSION_ID${NC}"
+            rm -f "$AUDIO_FILE"
+            continue
+            ;;
     esac
     echo "[$TIMESTAMP] User: $TRANSCRIPT" >> "$TRANSCRIPT_FILE"
     
     # Add user message to conversation history
     add_to_conversation "user" "$TRANSCRIPT"
     
+    # Save to database if available
+    if [ -f "$DB_SCRIPT" ]; then
+        echo -e "${BLUE}Saving to database...${NC}" >&2
+        python3 "$DB_SCRIPT" add-message "$CURRENT_SESSION_ID" "$TIMESTAMP" "user" "$TRANSCRIPT" "$AUDIO_FILE" >/dev/null 2>&1
+    fi
+    
     # Get ChatGPT response with conversation history
     echo -e "${BLUE}ChatGPT is thinking...${NC}"
+    
+    # Get conversation history from database if available, otherwise use local file
+    if [ -f "$DB_SCRIPT" ]; then
+        CONVERSATION_HISTORY=$(python3 "$DB_SCRIPT" load "$CURRENT_SESSION_ID" 2>/dev/null)
+        if [ -z "$CONVERSATION_HISTORY" ] || [ "$CONVERSATION_HISTORY" = "[]" ]; then
+            CONVERSATION_HISTORY=$(get_conversation_history)
+        fi
+    else
+        CONVERSATION_HISTORY=$(get_conversation_history)
+    fi
     
     RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
       -H "Content-Type: application/json" \
       -H "Authorization: Bearer $OPENAI_API_KEY" \
       -d "{
         \"model\": \"$CHATGPT_MODEL\",
-        \"messages\": $(get_conversation_history)
+        \"messages\": $CONVERSATION_HISTORY
       }" | jq -r '.choices[0].message.content')
     
     echo -e "${GREEN}ChatGPT:${NC}"
@@ -172,6 +219,11 @@ while true; do
     
     # Add assistant response to conversation history
     add_to_conversation "assistant" "$RESPONSE"
+    
+    # Save to database if available
+    if [ -f "$DB_SCRIPT" ]; then
+        python3 "$DB_SCRIPT" add-message "$CURRENT_SESSION_ID" "$TIMESTAMP" "assistant" "$RESPONSE" >/dev/null 2>&1
+    fi
     
     # Speak response if TTS is enabled
     if [ "$TTS_ENABLED" = true ]; then
