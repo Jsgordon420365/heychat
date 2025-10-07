@@ -1,7 +1,15 @@
 #!/bin/bash
 # quick-ask.sh
 
-source "$HOME/.config/voice-chatgpt/.env"
+# Load environment variables
+ENV_FILE="$HOME/.config/voice-chatgpt/.env"
+if [ ! -f "$ENV_FILE" ]; then
+    echo "Error: .env file not found at $ENV_FILE"
+    echo "Create it with: OPENAI_API_KEY=\"your-openai-api-key-here\""
+    exit 1
+fi
+
+source "$ENV_FILE"
 
 TIMESTAMP=$(date +%Y%m%d%H%M%S)
 AUDIO="$LOG_DIR/q_${TIMESTAMP}.wav"
