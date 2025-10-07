@@ -64,7 +64,8 @@ show_help() {
     echo "  ❓ Help: 'help', 'commands', 'what can i say'"
     echo ""
     echo -e "${GREEN}Controls:${NC}"
-    echo "  - Press Ctrl+C to stop recording"
+    echo "  - 4 seconds of silence automatically sends your message"
+    echo "  - Press Ctrl+C to manually stop recording"
     echo "  - Your words appear on screen as they're transcribed"
     echo "  - Commands are case-insensitive"
     echo ""
@@ -85,11 +86,20 @@ echo ""
 while true; do
     TIMESTAMP=$(date +%Y%m%d%H%M%S)
     
-    echo -e "${BLUE}[${TIMESTAMP}] 🎤 Recording... Press Ctrl+C when done${NC}"
+    echo -e "${BLUE}[${TIMESTAMP}] 🎤 Recording... (4s silence = send, or Ctrl+C to stop)${NC}"
     echo -e "${YELLOW}Listening...${NC}"
     
-    # Record audio using sox
-    rec "$AUDIO_FILE" 2>/dev/null
+    # Record audio using sox with silence detection
+    # silence 1 0.1 1%: detect silence (1 second of 0.1% volume)
+    # -1: end recording after first silence detection  
+    # 4: wait 4 seconds of silence before stopping
+    rec -t wav "$AUDIO_FILE" trim 0 30 silence 1 0.1 1% -1 4 1% 2>/dev/null
+    
+    # Check if we got any audio (file size > 0)
+    if [ ! -s "$AUDIO_FILE" ]; then
+        echo -e "${YELLOW}No audio detected. Try speaking louder or check your microphone.${NC}"
+        continue
+    fi
     
     echo -e "${GREEN}Processing...${NC}"
     

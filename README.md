@@ -31,7 +31,7 @@ heychat/
 - **Conversation Memory**: Maintains context across multiple interactions
 - **Optional Text-to-Speech**: Toggle speech output on/off during conversation
 - **Voice Commands**: Special voice commands for control (quit, clear, help, tts on/off)
-- **Smart Recording**: Records audio until you press Ctrl+C
+- **Smart Recording**: Records audio with 4-second silence detection or manual Ctrl+C stop
 - **Transcription**: Uses OpenAI Whisper API for accurate speech-to-text
 - **AI Responses**: Gets contextual responses from ChatGPT
 - **Conversation Logging**: Saves full conversation history to `$LOG_DIR/transcripts.log`
@@ -147,7 +147,7 @@ EOF
 ### Extended Conversation
 ```bash
 ./voice-chatgpt.sh
-# Records until Ctrl+C, transcribes, gets ChatGPT response, speaks it back
+# Records until 4 seconds of silence or Ctrl+C, transcribes, gets ChatGPT response, speaks it back
 ```
 
 ## File Management
@@ -177,6 +177,12 @@ Control the conversation using voice commands:
 - **Disable at Start**: Use `./voice-chatgpt.sh --no-tts`
 - **Toggle During**: Use voice commands `"tts on"` or `"tts off"`
 - **Visual Feedback**: Clear indicators when TTS is enabled/disabled
+
+### Smart Recording
+- **Automatic Send**: 4 seconds of silence automatically sends your message
+- **Manual Control**: Press Ctrl+C to manually stop recording
+- **Maximum Duration**: Recording stops after 30 seconds maximum
+- **No Audio Detection**: Warns if no audio is detected
 
 ## Troubleshooting
 
