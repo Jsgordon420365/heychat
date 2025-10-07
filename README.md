@@ -27,18 +27,32 @@ heychat/
 **Purpose**: Full interactive voice conversation with ChatGPT
 
 **Features**:
-- Records audio until you press Ctrl+C
-- Transcribes audio using OpenAI Whisper API
-- Sends transcript to ChatGPT API
-- Speaks the response using macOS `say` command
-- Logs conversations to `$LOG_DIR/transcripts.log`
-- Color-coded terminal output for better UX
-- Timestamped recordings and logs
+- **Continuous Conversation**: Keeps listening after each response for ongoing dialogue
+- **Conversation Memory**: Maintains context across multiple interactions
+- **Optional Text-to-Speech**: Toggle speech output on/off during conversation
+- **Voice Commands**: Special voice commands for control (quit, clear, help, tts on/off)
+- **Smart Recording**: Records audio until you press Ctrl+C
+- **Transcription**: Uses OpenAI Whisper API for accurate speech-to-text
+- **AI Responses**: Gets contextual responses from ChatGPT
+- **Conversation Logging**: Saves full conversation history to `$LOG_DIR/transcripts.log`
+- **Color-coded Output**: Enhanced terminal interface with status indicators
+- **Timestamped Logs**: All interactions are timestamped for easy reference
 
 **Usage**:
 ```bash
+# Start with text-to-speech enabled (default)
 ./voice-chatgpt.sh
+
+# Start with text-to-speech disabled
+./voice-chatgpt.sh --no-tts
 ```
+
+**Voice Commands** (speak these during recording):
+- `"quit"` or `"exit"` - End the conversation
+- `"clear"` - Clear conversation history
+- `"help"` - Show available commands
+- `"tts on"` - Enable text-to-speech
+- `"tts off"` - Disable text-to-speech
 
 ### 2. `quick-ask.sh` - Quick Voice Queries
 
@@ -140,7 +154,29 @@ EOF
 
 - **Audio Files**: Temporarily stored in `$LOG_DIR` and automatically cleaned up
 - **Transcripts**: Permanently logged to `$LOG_DIR/transcripts.log`
+- **Conversation History**: Maintained in `$LOG_DIR/conversation.json` for context
 - **Timestamps**: All interactions are timestamped for easy reference
+
+## Conversation Features
+
+### Continuous Dialogue
+The enhanced `voice-chatgpt.sh` now supports ongoing conversations:
+- **Memory**: Remembers previous parts of the conversation
+- **Context**: ChatGPT can reference earlier parts of your discussion
+- **Natural Flow**: No need to restart the script for follow-up questions
+
+### Voice Commands
+Control the conversation using voice commands:
+- Say `"quit"` or `"exit"` to end the session
+- Say `"clear"` to reset conversation history
+- Say `"help"` to see available commands
+- Say `"tts on"` or `"tts off"` to toggle speech output
+
+### Text-to-Speech Control
+- **Default**: Text-to-speech is enabled by default
+- **Disable at Start**: Use `./voice-chatgpt.sh --no-tts`
+- **Toggle During**: Use voice commands `"tts on"` or `"tts off"`
+- **Visual Feedback**: Clear indicators when TTS is enabled/disabled
 
 ## Troubleshooting
 
