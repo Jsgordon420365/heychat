@@ -56,12 +56,17 @@ clear_conversation() {
 # Function to show help
 show_help() {
     echo -e "${BLUE}HeyChat Voice Interface${NC}"
-    echo -e "${GREEN}Commands:${NC}"
+    echo -e "${GREEN}Voice Commands (say any of these):${NC}"
+    echo "  🚪 Exit: 'quit', 'exit', 'goodbye', 'bye'"
+    echo "  🧹 Clear: 'clear', 'clear conversation', 'reset'"
+    echo "  📢 TTS: 'tts on', 'enable tts', 'turn on speech'"
+    echo "  🔇 TTS: 'tts off', 'disable tts', 'turn off speech'"
+    echo "  ❓ Help: 'help', 'commands', 'what can i say'"
+    echo ""
+    echo -e "${GREEN}Controls:${NC}"
     echo "  - Press Ctrl+C to stop recording"
-    echo "  - Type 'quit' or 'exit' to end conversation"
-    echo "  - Type 'clear' to clear conversation history"
-    echo "  - Type 'help' to show this help"
-    echo "  - Type 'tts on/off' to toggle text-to-speech"
+    echo "  - Your words appear on screen as they're transcribed"
+    echo "  - Commands are case-insensitive"
     echo ""
 }
 
@@ -80,7 +85,8 @@ echo ""
 while true; do
     TIMESTAMP=$(date +%Y%m%d%H%M%S)
     
-    echo -e "${BLUE}[${TIMESTAMP}] Recording... Press Ctrl+C when done${NC}"
+    echo -e "${BLUE}[${TIMESTAMP}] 🎤 Recording... Press Ctrl+C when done${NC}"
+    echo -e "${YELLOW}Listening...${NC}"
     
     # Record audio using sox
     rec "$AUDIO_FILE" 2>/dev/null
@@ -88,44 +94,49 @@ while true; do
     echo -e "${GREEN}Processing...${NC}"
     
     # Transcribe with Whisper
+    echo -e "${BLUE}Transcribing...${NC}"
     TRANSCRIPT=$(curl -s https://api.openai.com/v1/audio/transcriptions \
       -H "Authorization: Bearer $OPENAI_API_KEY" \
       -H "Content-Type: multipart/form-data" \
       -F file="@$AUDIO_FILE" \
       -F model="whisper-1" | jq -r '.text')
     
-    # Check for special commands
+    # Clean up the transcript (remove extra whitespace and normalize)
+    TRANSCRIPT=$(echo "$TRANSCRIPT" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr '[:upper:]' '[:lower:]')
+    
+    # Show the transcript immediately
+    echo -e "${GREEN}You said: ${NC}$TRANSCRIPT"
+    
+    # Check for special commands (case-insensitive)
     case "$TRANSCRIPT" in
-        "quit"|"exit"|"goodbye")
+        "quit"|"exit"|"goodbye"|"bye")
             echo -e "${GREEN}Goodbye! 👋${NC}"
             rm -f "$AUDIO_FILE"
             exit 0
             ;;
-        "clear")
+        "clear"|"clear conversation"|"reset")
             clear_conversation
             rm -f "$AUDIO_FILE"
             continue
             ;;
-        "help")
+        "help"|"commands"|"what can i say")
             show_help
             rm -f "$AUDIO_FILE"
             continue
             ;;
-        "tts on")
+        "tts on"|"enable tts"|"turn on speech"|"speak responses")
             TTS_ENABLED=true
             echo -e "${GREEN}Text-to-speech enabled.${NC}"
             rm -f "$AUDIO_FILE"
             continue
             ;;
-        "tts off")
+        "tts off"|"disable tts"|"turn off speech"|"stop speaking")
             TTS_ENABLED=false
             echo -e "${YELLOW}Text-to-speech disabled.${NC}"
             rm -f "$AUDIO_FILE"
             continue
             ;;
     esac
-    
-    echo -e "${GREEN}You said: ${NC}$TRANSCRIPT"
     echo "[$TIMESTAMP] User: $TRANSCRIPT" >> "$TRANSCRIPT_FILE"
     
     # Add user message to conversation history
