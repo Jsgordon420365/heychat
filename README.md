@@ -1,6 +1,6 @@
 # HeyChat
 
-A simple voice-based ChatGPT interface that allows you to have conversations with ChatGPT using your voice. The project consists of two bash scripts that provide different interaction modes for voice-based AI communication.
+A comprehensive voice-based ChatGPT interface that allows you to have conversations with ChatGPT using your voice. The project includes bash scripts for voice interaction, database integration for conversation persistence, and modern GUI applications for easy access to all functions.
 
 ## Features
 
@@ -10,14 +10,31 @@ A simple voice-based ChatGPT interface that allows you to have conversations wit
 - **Text-to-Speech**: Hear responses using macOS built-in speech synthesis
 - **Conversation Logging**: Keep track of your voice conversations
 - **Two Interaction Modes**: Quick questions or extended conversations
+- **Database Integration**: Persistent conversation storage with Supabase
+- **Modern GUI**: Web and desktop interfaces for easy access
+- **Conversation Management**: Browse, search, and export conversations
+- **Real-time Monitoring**: Live status updates and logging
 
 ## Project Structure
 
 ```
 heychat/
-├── quick-ask.sh      # Quick 5-second voice queries
-├── voice-chatgpt.sh  # Interactive voice conversations
-└── README.md         # This file
+├── quick-ask.sh              # Quick 5-second voice queries
+├── voice-chatgpt.sh          # Interactive voice conversations
+├── heychat_gui.py            # Desktop GUI application
+├── heychat_web_gui.py        # Web-based GUI application
+├── launch_gui.sh             # Desktop GUI launcher
+├── launch_web_gui.sh         # Web GUI launcher
+├── view_conversations.py     # Command-line conversation viewer
+├── browse_conversations.py   # Interactive conversation browser
+├── supabase_viewer.py        # Database viewer with SQL queries
+├── view_db.sh                # Database viewing launcher
+├── supabase_integration.py   # Database integration script
+├── schema.sql                # Database schema definition
+├── README.md                 # Main documentation
+├── GUI_README.md             # GUI documentation
+├── VIEWING_TOOLS.md          # Database tools documentation
+└── requirements_gui.txt      # GUI dependencies
 ```
 
 ## Scripts
@@ -68,6 +85,76 @@ heychat/
 ```bash
 ./quick-ask.sh
 ```
+
+## GUI Applications
+
+HeyChat includes two modern GUI applications for easy access to all functions:
+
+### 🌐 Web GUI (Recommended)
+A responsive web-based interface that works on any device with a browser.
+
+```bash
+# Launch the web GUI
+./launch_web_gui.sh
+```
+
+**Features:**
+- Modern, responsive design
+- Real-time status updates
+- Cross-platform compatibility
+- Dashboard layout with organized sections
+- Live logging and monitoring
+
+### 🖥️ Desktop GUI (Alternative)
+A native desktop application with tabbed interface.
+
+```bash
+# Launch the desktop GUI
+./launch_gui.sh
+```
+
+**Features:**
+- Native desktop integration
+- Tabbed interface (Console, Conversations, Logs)
+- Interactive conversation browser
+- Color-coded output
+- Keyboard shortcuts
+
+**GUI Capabilities:**
+- **Voice Controls**: Start/stop voice chat and quick ask
+- **Database Management**: Browse, search, and export conversations
+- **Real-time Monitoring**: Live status updates and logging
+- **Settings**: Configuration and connection testing
+- **Tools**: Log viewing and GitHub access
+
+For detailed GUI documentation, see [GUI_README.md](GUI_README.md).
+
+## Database Integration
+
+HeyChat includes comprehensive database integration for persistent conversation storage:
+
+### 🗄️ Supabase Integration
+- **Persistent Storage**: All conversations saved to Supabase database
+- **Session Management**: Unique session IDs for conversation tracking
+- **Search & Export**: Full-text search and export capabilities
+- **Statistics**: Usage analytics and conversation metrics
+
+### 📊 Database Tools
+```bash
+# Interactive conversation browser
+./browse_conversations.py
+
+# Command-line viewer
+python3 view_conversations.py list --limit 10
+
+# Search conversations
+python3 view_conversations.py search --search "python"
+
+# Export conversation
+python3 view_conversations.py export --session-id session_123 --format json
+```
+
+For detailed database documentation, see [VIEWING_TOOLS.md](VIEWING_TOOLS.md).
 
 ## Prerequisites
 

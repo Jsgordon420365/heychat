@@ -1,0 +1,22 @@
+# HeyChat GUI Requirements
+# These are the Python packages needed for the GUI application
+
+# Core GUI framework (usually included with Python)
+# tkinter - Built-in with Python 3
+# threading - Built-in with Python 3
+# subprocess - Built-in with Python 3
+# os - Built-in with Python 3
+# sys - Built-in with Python 3
+# json - Built-in with Python 3
+# datetime - Built-in with Python 3
+# webbrowser - Built-in with Python 3
+
+# Optional: Enhanced GUI components (if needed)
+# ttkthemes - For additional tkinter themes
+# pillow - For image handling (if adding icons)
+
+# Note: The GUI uses only Python standard library modules
+# No additional pip installs are required for basic functionality
+
+# To install optional enhancements:
+# pip install ttkthemes pillow
