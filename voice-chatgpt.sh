@@ -78,6 +78,9 @@ if [ "$1" = "--no-tts" ] || [ "$1" = "-n" ]; then
     echo -e "${YELLOW}Text-to-speech disabled. Use 'tts on' to enable.${NC}"
 fi
 
+# Set up signal handlers
+trap 'echo -e "\n${YELLOW}Interrupted. Goodbye! 👋${NC}"; rm -f "$AUDIO_FILE"; exit 0' INT TERM
+
 echo -e "${BLUE}🎤 HeyChat Voice Interface Started${NC}"
 echo -e "${GREEN}Type 'help' for commands or start speaking...${NC}"
 echo ""
@@ -90,10 +93,9 @@ while true; do
     echo -e "${YELLOW}Listening...${NC}"
     
     # Record audio using sox with silence detection
-    # silence 1 0.1 1%: detect silence (1 second of 0.1% volume)
-    # -1: end recording after first silence detection  
-    # 4: wait 4 seconds of silence before stopping
-    rec -t wav "$AUDIO_FILE" trim 0 30 silence 1 0.1 1% -1 4 1% 2>/dev/null
+    # silence 1 0.1 1%: detect silence at beginning (1 period, 0.1s duration, 1% threshold)
+    # 1 4.0 1%: detect silence at end (1 period, 4.0s duration, 1% threshold)
+    rec -t wav "$AUDIO_FILE" trim 0 30 silence 1 0.1 1% 1 4.0 1% 2>/dev/null
     
     # Check if we got any audio (file size > 0)
     if [ ! -s "$AUDIO_FILE" ]; then
@@ -122,6 +124,7 @@ while true; do
         "quit"|"exit"|"goodbye"|"bye")
             echo -e "${GREEN}Goodbye! 👋${NC}"
             rm -f "$AUDIO_FILE"
+            echo -e "${BLUE}Exiting script...${NC}"
             exit 0
             ;;
         "clear"|"clear conversation"|"reset")
