@@ -40,3 +40,5 @@ echo ""
 python3 heychat_gui.py
 
 echo -e "${YELLOW}HeyChat GUI closed. Goodbye! 👋${NC}"
+
+

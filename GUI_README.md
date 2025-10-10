@@ -4,11 +4,31 @@ This directory contains two modern GUI applications for the HeyChat voice conver
 
 ## 🎨 Available GUI Options
 
-### 1. **Web GUI** (Recommended) 🌐
-**File:** `heychat_web_gui.py`  
+### 1. **Web Server** (Full-Featured) 🌐
+**File:** `heychat_web_server.py`
+**Launcher:** `./launch_web_server.sh`
+
+A complete Flask-based HTTP/WebSocket server with modern web interface and REST API.
+
+**Features:**
+- 🚀 **REST API** - Full API access to all HeyChat functions
+- 🔌 **WebSocket support** - Real-time updates and live process monitoring
+- 🌐 **Remote access** - Access from any device on the network
+- 📡 **Process streaming** - Live output from voice processes
+- 📊 **API endpoints** - Integrate with other tools and services
+- 🎨 **Modern SPA** - Single-page application with smooth UX
+
+**Launch:**
+```bash
+./launch_web_server.sh
+# Access at http://localhost:5000
+```
+
+### 2. **Web GUI** (Simple) 🌐
+**File:** `heychat_web_gui.py`
 **Launcher:** `./launch_web_gui.sh`
 
-A modern, responsive web-based interface that works on all platforms and devices.
+A lightweight web-based interface that works on all platforms and devices.
 
 **Features:**
 - 🌐 **Cross-platform compatibility** - Works on any device with a web browser
@@ -23,8 +43,8 @@ A modern, responsive web-based interface that works on all platforms and devices
 ./launch_web_gui.sh
 ```
 
-### 2. **Desktop GUI** (Alternative) 🖥️
-**File:** `heychat_gui.py`  
+### 3. **Desktop GUI** (Native) 🖥️
+**File:** `heychat_gui.py`
 **Launcher:** `./launch_gui.sh`
 
 A native desktop application using Python's tkinter framework.
@@ -43,18 +63,26 @@ A native desktop application using Python's tkinter framework.
 
 ## 🚀 Quick Start
 
-### Web GUI (Recommended)
+### Web Server (Full-Featured - Recommended)
 ```bash
 # Make sure you're in the HeyChat directory
 cd /Users/gordo/Projects/heychat
 
-# Launch the web GUI
+# Launch the web server
+./launch_web_server.sh
+```
+
+The server will start and the web interface will be available at `http://localhost:5000`
+
+### Web GUI (Simple)
+```bash
+# Launch the simple web GUI
 ./launch_web_gui.sh
 ```
 
 The web interface will automatically open in your browser at `http://localhost:5000`
 
-### Desktop GUI (Alternative)
+### Desktop GUI (Native)
 ```bash
 # Launch the desktop GUI
 ./launch_gui.sh
@@ -237,3 +265,5 @@ This project is licensed under the MIT License - see the main README for details
 ---
 
 **Enjoy using HeyChat with its modern, intuitive GUI interface! 🎉**
+
+

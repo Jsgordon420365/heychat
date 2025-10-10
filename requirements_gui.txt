@@ -1,6 +1,7 @@
 # HeyChat GUI Requirements
-# These are the Python packages needed for the GUI application
+# These are the Python packages needed for the GUI applications
 
+# === Desktop GUI (tkinter) ===
 # Core GUI framework (usually included with Python)
 # tkinter - Built-in with Python 3
 # threading - Built-in with Python 3
@@ -15,8 +16,23 @@
 # ttkthemes - For additional tkinter themes
 # pillow - For image handling (if adding icons)
 
-# Note: The GUI uses only Python standard library modules
-# No additional pip installs are required for basic functionality
+# === Web GUI (Flask) ===
+# Flask web framework and extensions
+flask>=3.0.0
+flask-cors>=4.0.0
+flask-socketio>=5.3.0
 
-# To install optional enhancements:
-# pip install ttkthemes pillow
+# WebSocket support
+python-socketio>=5.10.0
+python-engineio>=4.8.0
+
+# Additional utilities
+werkzeug>=3.0.0
+
+# Note: Desktop GUI uses only Python standard library modules
+# Web GUI requires Flask and related packages
+
+# Installation:
+# pip install -r requirements_gui.txt
+
+

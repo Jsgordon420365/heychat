@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeyChat - Voice AI Assistant</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .status-bar {
+            background: white;
+            border-radius: 10px;
+            padding: 15px 25px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #27ae60;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .panel h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            width: 100%;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .tabs {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .tab-buttons {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .console {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            height: 400px;
+            overflow-y: auto;
+            line-height: 1.5;
+        }
+
+        .console-line {
+            margin-bottom: 5px;
+        }
+
+        .console-timestamp {
+            color: #888;
+        }
+
+        .console-info { color: #00ff00; }
+        .console-success { color: #27ae60; }
+        .console-warning { color: #f39c12; }
+        .console-error { color: #e74c3c; }
+
+        .conversation-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .conversation-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid #667eea;
+        }
+
+        .conversation-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .conversation-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .conversation-meta {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .search-box {
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .message-bubble {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .message-role {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .message-content {
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .message-timestamp {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎤 HeyChat Voice AI Assistant</h1>
+            <p>Modern web interface for voice conversations with ChatGPT</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span id="status-text">Connected</span>
+            </div>
+            <div id="clock"></div>
+        </div>
+
+        <div class="main-grid">
+            <div class="sidebar">
+                <div class="panel">
+                    <h2>🎤 Voice Controls</h2>
+                    <button class="btn btn-success" onclick="startVoiceChat()">
+                        ▶️ Start Voice Chat
+                    </button>
+                    <button class="btn btn-primary" onclick="startQuickAsk()">
+                        ⚡ Quick Ask (5s)
+                    </button>
+                    <button class="btn btn-danger" onclick="stopVoice('voice_chat')" id="stop-voice-btn" disabled>
+                        ⏹️ Stop Voice
+                    </button>
+                </div>
+
+                <div class="panel">
+                    <h2>🗄️ Database</h2>
+                    <button class="btn btn-primary" onclick="loadConversations()">
+                        📋 Recent Conversations
+                    </button>
+                    <button class="btn btn-primary" onclick="showSearch()">
+                        🔍 Search
+                    </button>
+                    <button class="btn btn-primary" onclick="loadStats()">
+                        📊 Statistics
+                    </button>
+                </div>
+
+                <div class="panel">
+                    <h2>🛠️ Tools</h2>
+                    <button class="btn btn-primary" onclick="testConnection()">
+                        🔌 Test Connection
+                    </button>
+                    <button class="btn btn-primary" onclick="viewLogs()">
+                        📝 View Logs
+                    </button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="tabs">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" onclick="switchTab('console')">Console</button>
+                        <button class="tab-btn" onclick="switchTab('conversations')">Conversations</button>
+                        <button class="tab-btn" onclick="switchTab('stats')">Statistics</button>
+                    </div>
+
+                    <div id="console-tab" class="tab-content active">
+                        <div class="console" id="console"></div>
+                    </div>
+
+                    <div id="conversations-tab" class="tab-content">
+                        <div class="search-box">
+                            <input type="text" id="search-input" placeholder="Search conversations..." onkeyup="searchConversations(event)">
+                        </div>
+                        <div class="conversation-list" id="conversation-list">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>Click "Recent Conversations" to load data</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="stats-tab" class="tab-content">
+                        <div class="stats-grid" id="stats-grid">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>Click "Statistics" to load data</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize WebSocket
+        const socket = io();
+
+        socket.on('connect', () => {
+            logConsole('Connected to server', 'success');
+            updateStatus('Connected');
+        });
+
+        socket.on('disconnect', () => {
+            logConsole('Disconnected from server', 'error');
+            updateStatus('Disconnected');
+        });
+
+        socket.on('process_output', (data) => {
+            logConsole(data.output.trim(), 'info');
+        });
+
+        socket.on('process_complete', (data) => {
+            logConsole(`Process ${data.description} completed with code ${data.return_code}`,
+                      data.return_code === 0 ? 'success' : 'error');
+            document.getElementById('stop-voice-btn').disabled = true;
+        });
+
+        socket.on('process_error', (data) => {
+            logConsole(`Process error: ${data.error}`, 'error');
+        });
+
+        // Clock update
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleString();
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Console logging
+        function logConsole(message, level = 'info') {
+            const console = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.className = 'console-line';
+            line.innerHTML = `<span class="console-timestamp">[${timestamp}]</span> <span class="console-${level}">${escapeHtml(message)}</span>`;
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function updateStatus(text) {
+            document.getElementById('status-text').textContent = text;
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        // Voice controls
+        async function startVoiceChat() {
+            try {
+                const response = await fetch('/api/voice/start', { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    logConsole('Starting voice chat...', 'success');
+                    document.getElementById('stop-voice-btn').disabled = false;
+                } else {
+                    logConsole(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                logConsole(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function startQuickAsk() {
+            try {
+                const response = await fetch('/api/voice/quick-ask', { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    logConsole('Starting quick ask...', 'success');
+                } else {
+                    logConsole(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                logConsole(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function stopVoice(processId) {
+            try {
+                const response = await fetch(`/api/voice/stop/${processId}`, { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    logConsole('Voice process stopped', 'warning');
+                    document.getElementById('stop-voice-btn').disabled = true;
+                } else {
+                    logConsole(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                logConsole(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Database functions
+        async function loadConversations() {
+            try {
+                const list = document.getElementById('conversation-list');
+                list.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading conversations...</p></div>';
+
+                const response = await fetch('/api/conversations/list?limit=20');
+                const data = await response.json();
+
+                if (data.success && data.conversations && data.conversations.length > 0) {
+                    list.innerHTML = '';
+                    data.conversations.forEach(conv => {
+                        const item = document.createElement('div');
+                        item.className = 'conversation-item';
+                        item.onclick = () => viewConversation(conv.session_id || conv.id);
+                        item.innerHTML = `
+                            <div class="conversation-title">${conv.title || conv.session_id || 'Untitled'}</div>
+                            <div class="conversation-meta">
+                                Messages: ${conv.message_count || 0} |
+                                ${conv.created_at ? new Date(conv.created_at).toLocaleString() : 'Unknown date'}
+                            </div>
+                        `;
+                        list.appendChild(item);
+                    });
+                    logConsole(`Loaded ${data.conversations.length} conversations`, 'success');
+                } else {
+                    list.innerHTML = '<div class="loading"><p>No conversations found</p></div>';
+                    logConsole('No conversations found', 'warning');
+                }
+
+                switchTab('conversations');
+            } catch (error) {
+                logConsole(`Error loading conversations: ${error.message}`, 'error');
+                document.getElementById('conversation-list').innerHTML =
+                    `<div class="loading"><p>Error: ${error.message}</p></div>`;
+            }
+        }
+
+        async function viewConversation(sessionId) {
+            try {
+                logConsole(`Loading conversation ${sessionId}...`, 'info');
+                const response = await fetch(`/api/conversations/show/${sessionId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const list = document.getElementById('conversation-list');
+                    list.innerHTML = '<button class="btn btn-primary" onclick="loadConversations()">← Back to List</button>';
+
+                    const conversation = data.conversation;
+                    if (conversation.messages && conversation.messages.length > 0) {
+                        conversation.messages.forEach(msg => {
+                            const bubble = document.createElement('div');
+                            bubble.className = 'message-bubble';
+                            bubble.innerHTML = `
+                                <div class="message-role">${msg.role || 'unknown'}</div>
+                                <div class="message-content">${escapeHtml(msg.content || msg.text || '')}</div>
+                                <div class="message-timestamp">${msg.timestamp ? new Date(msg.timestamp).toLocaleString() : ''}</div>
+                            `;
+                            list.appendChild(bubble);
+                        });
+                    }
+
+                    logConsole(`Loaded conversation ${sessionId}`, 'success');
+                }
+            } catch (error) {
+                logConsole(`Error viewing conversation: ${error.message}`, 'error');
+            }
+        }
+
+        async function searchConversations(event) {
+            if (event.key === 'Enter') {
+                const searchTerm = document.getElementById('search-input').value;
+                if (!searchTerm) return;
+
+                try {
+                    const list = document.getElementById('conversation-list');
+                    list.innerHTML = '<div class="loading"><div class="spinner"></div><p>Searching...</p></div>';
+
+                    const response = await fetch(`/api/conversations/search?q=${encodeURIComponent(searchTerm)}`);
+                    const data = await response.json();
+
+                    if (data.success && data.results && data.results.length > 0) {
+                        list.innerHTML = '';
+                        data.results.forEach(conv => {
+                            const item = document.createElement('div');
+                            item.className = 'conversation-item';
+                            item.onclick = () => viewConversation(conv.session_id || conv.id);
+                            item.innerHTML = `
+                                <div class="conversation-title">${conv.title || conv.session_id || 'Untitled'}</div>
+                                <div class="conversation-meta">${conv.preview || ''}</div>
+                            `;
+                            list.appendChild(item);
+                        });
+                        logConsole(`Found ${data.results.length} results`, 'success');
+                    } else {
+                        list.innerHTML = '<div class="loading"><p>No results found</p></div>';
+                    }
+                } catch (error) {
+                    logConsole(`Search error: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const grid = document.getElementById('stats-grid');
+                grid.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading statistics...</p></div>';
+
+                const response = await fetch('/api/conversations/stats');
+                const data = await response.json();
+
+                if (data.success && data.stats) {
+                    grid.innerHTML = '';
+                    const stats = data.stats;
+
+                    const statCards = [
+                        { label: 'Total Conversations', value: stats.total_conversations || 0 },
+                        { label: 'Total Messages', value: stats.total_messages || 0 },
+                        { label: 'This Week', value: stats.conversations_this_week || 0 },
+                        { label: 'Today', value: stats.conversations_today || 0 }
+                    ];
+
+                    statCards.forEach(stat => {
+                        const card = document.createElement('div');
+                        card.className = 'stat-card';
+                        card.innerHTML = `
+                            <div class="stat-value">${stat.value}</div>
+                            <div class="stat-label">${stat.label}</div>
+                        `;
+                        grid.appendChild(card);
+                    });
+
+                    logConsole('Statistics loaded', 'success');
+                } else {
+                    grid.innerHTML = '<div class="loading"><p>No statistics available</p></div>';
+                }
+
+                switchTab('stats');
+            } catch (error) {
+                logConsole(`Error loading stats: ${error.message}`, 'error');
+            }
+        }
+
+        async function showSearch() {
+            switchTab('conversations');
+            document.getElementById('search-input').focus();
+        }
+
+        // System functions
+        async function testConnection() {
+            try {
+                logConsole('Testing database connection...', 'info');
+                const response = await fetch('/api/system/test-connection');
+                const data = await response.json();
+
+                if (data.success) {
+                    logConsole('Connection test successful', 'success');
+                    if (data.output) logConsole(data.output, 'info');
+                } else {
+                    logConsole(`Connection test failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                logConsole(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function viewLogs() {
+            try {
+                logConsole('Fetching logs...', 'info');
+                const response = await fetch('/api/system/logs');
+                const data = await response.json();
+
+                if (data.success && data.logs) {
+                    logConsole(`Found ${data.logs.length} log files:`, 'success');
+                    data.logs.forEach(log => {
+                        logConsole(`  ${log.name} (${(log.size / 1024).toFixed(2)} KB)`, 'info');
+                    });
+                } else {
+                    logConsole('No logs found', 'warning');
+                }
+            } catch (error) {
+                logConsole(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize
+        logConsole('HeyChat Web Interface initialized', 'success');
+        logConsole('Ready to start voice conversations!', 'info');
+    </script>
+</body>
+</html>
