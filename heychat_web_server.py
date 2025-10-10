@@ -397,21 +397,22 @@ def handle_subscribe(data):
 
 def main():
     """Start the web server"""
-    print("""
+    port = 5001
+    print(f"""
     ╔════════════════════════════════════════════╗
     ║   HeyChat Web Server                       ║
     ║   Voice AI Assistant - HTTP Interface      ║
     ╚════════════════════════════════════════════╝
 
     🌐 Server starting...
-    📡 API: http://localhost:5000/api
-    🎨 Web UI: http://localhost:5000
-    🔌 WebSocket: ws://localhost:5000/socket.io
+    📡 API: http://localhost:{port}/api
+    🎨 Web UI: http://localhost:{port}
+    🔌 WebSocket: ws://localhost:{port}/socket.io
 
     Press Ctrl+C to stop
     """)
 
-    socketio.run(app, host='0.0.0.0', port=5000, debug=False, allow_unsafe_werkzeug=True)
+    socketio.run(app, host='0.0.0.0', port=port, debug=False, allow_unsafe_werkzeug=True)
 
 if __name__ == '__main__':
     main()

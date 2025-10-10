@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(pip install:*)",
+      "Bash(python3:*)",
+      "Bash(lsof:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
